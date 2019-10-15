@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "amqp": {
+        "host": "localhost",
+        "username": "user",
+        "password": "password",
+        "exchange": "locator",
+        "prefix": "dev"
+    },
+    "queues": {
+        "request": {
+            "wifi": {
+                "routingKey": "rpc.wifi.req",
+                "responseQueue": "rpc.wifi.res"
+            }
+        },
+        "response": {
+            "logCrawler": {
+                "routingKey": "rpc.log-crawler.res",
+                "responseQueue": "rpc.log-crawler.req"
+            }
+        }
+    }
+}

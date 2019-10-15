@@ -1,0 +1,37 @@
+{
+  "name": "log-crawler",
+  "version": "1.0.0",
+  "description": "MSSQL log crawler",
+  "main": "dist/index.js",
+  "scripts": {
+    "tsc": "tsc",
+    "tslint": "tslint --project .",
+    "build": "npm run tslint && npm run tsc",
+    "start": "npm run build && node ./index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "cynt4k",
+  "license": "MIT",
+  "_moduleAliases": {
+    "@home": "./dist"
+  },
+  "dependencies": {
+    "amqplib": "^0.5.5",
+    "config": "^3.2.3",
+    "lodash": "^4.17.15",
+    "log4js": "^5.2.2",
+    "module-alias": "^2.2.2",
+    "mssql": "^5.1.0",
+    "uuid": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.5.13",
+    "@types/config": "0.0.34",
+    "@types/lodash": "^4.14.144",
+    "@types/log4js": "^2.3.5",
+    "@types/mssql": "^4.3.1",
+    "@types/uuid": "^3.4.5",
+    "tslint": "^5.20.0",
+    "typescript": "^3.6.4"
+  }
+}
