@@ -20,5 +20,11 @@
                 "responseQueue": "rpc.log-crawler.req"
             }
         }
+    },
+    "database": {
+        "server": "localhost",
+        "username": "sa",
+        "password": "password",
+        "database": "logs"
     }
 }

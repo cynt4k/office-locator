@@ -20,7 +20,15 @@ export interface IConfigQueuesRpc {
     responseQueue: string;
 }
 
+export interface IConfigDatabase {
+    server: string;
+    username: string;
+    password: string;
+    database: string;
+}
+
 export interface IConfig {
     amqp: IConfigAmqp;
     queues: IConfigQueues;
+    database: IConfigDatabase;
 }
