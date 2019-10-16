@@ -29,6 +29,9 @@ Logger.init();
         process.exit(1);
     }
 
+    const response = await MessageService.rpcBroadcast({ jo: 'test' }, MessageService.EnumRpcQueues.WIFI);
+    console.log(response);
+
     // const logs = await CrawlerController.getLastLogForDevice('64-A2-F9-31-01-76');
     // console.log(logs);
     // Logger.debug(logs.map((val) => val.toJSON()).reduce((prev, cur) => {

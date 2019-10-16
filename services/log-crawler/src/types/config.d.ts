@@ -7,12 +7,20 @@ export interface IConfigAmqp {
 }
 
 export interface IConfigQueues {
-    request: {
-        wifi: IConfigQueuesRpc;
+    rpc: {
+        ownRpcQueuePrefix: string;
+        responseQueuePrefix: string;
+        rpcTimeout: number;
+        names: {
+            [name: string]: string;
+        };
     };
-    response: {
-        logCrawler: IConfigQueuesRpc;
-    };
+    // request: {
+    //     wifi: IConfigQueuesRpc;
+    // };
+    // response: {
+    //     logCrawler: IConfigQueuesRpc;
+    // };
 }
 
 export interface IConfigQueuesRpc {

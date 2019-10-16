@@ -8,18 +8,26 @@
         "prefix": "dev"
     },
     "queues": {
-        "request": {
-            "wifi": {
-                "routingKey": "rpc.wifi.req",
-                "responseQueue": "rpc.wifi.res"
-            }
-        },
-        "response": {
-            "logCrawler": {
-                "routingKey": "rpc.log-crawler.res",
-                "responseQueue": "rpc.log-crawler.req"
+        "rpc": {
+            "ownRpcQueuePrefix": "rpc.log-crawler",
+            "responseQueuePrefix": "rpc-res.log-crawler",
+            "rpcTimeout": 6000000,
+            "names": {
+                "wifi": "rpc.wifi"
             }
         }
+        // "request": {
+        //     "wifi": {
+        //         "routingKey": "rpc.wifi.req",
+        //         "responseQueue": "rpc.wifi.res"
+        //     }
+        // },
+        // "response": {
+        //     "logCrawler": {
+        //         "routingKey": "rpc.log-crawler.res",
+        //         "responseQueue": "rpc.log-crawler.req"
+        //     }
+        // }
     },
     "database": {
         "server": "localhost",
