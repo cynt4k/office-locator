@@ -1,10 +1,11 @@
 import 'module-alias/register';
 import config from 'config';
 import { IConfigAmqp, IConfigQueues, IConfigDatabase } from '@home/types';
-import { MessageService } from '@home/core/services';
+import { MessageService, RpcService } from '@home/core/services';
 import { Logger } from '@home/core/utils';
 import { DatabaseService } from '@home/core/services/database/database.service';
 import { CrawlerController } from '@home/controller/crawler';
+
 
 const configAmqp = config.get<IConfigAmqp>('amqp');
 const configQueues = config.get<IConfigQueues>('queues');
@@ -14,7 +15,7 @@ Logger.init();
 
 (async () => {
     try {
-        await MessageService.init(configAmqp, configQueues);
+        await MessageService.init(configAmqp, configQueues, RpcService.handleRpcMessages);
         Logger.info(`Connection to AMQP ${configAmqp.host} successfull`);
     } catch (e) {
         Logger.error(e);
@@ -29,8 +30,18 @@ Logger.init();
         process.exit(1);
     }
 
-    const response = await MessageService.rpcBroadcast({ jo: 'test' }, MessageService.EnumRpcQueues.WIFI);
+    // const response = await MessageService.rpcBroadcast({ jo: 'test' }, MessageService.EnumRpcQueues.WIFI);
+    const response = await MessageService.rpcAnycast({ jo: 'asf' }, MessageService.EnumRpcQueues.WIFI);
     console.log(response);
+
+    async function exitHandler(exitCode?: number) {
+        await MessageService.disconnect();
+    }
+
+    process.on('exit', exitHandler);
+    process.on('SIGINT', exitHandler);
+    process.on('SIGUSR1', exitHandler);
+    process.on('SIGUSR2', exitHandler);
 
     // const logs = await CrawlerController.getLastLogForDevice('64-A2-F9-31-01-76');
     // console.log(logs);

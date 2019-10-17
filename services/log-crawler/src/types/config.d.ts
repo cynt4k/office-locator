@@ -11,6 +11,7 @@ export interface IConfigQueues {
         ownRpcQueuePrefix: string;
         responseQueuePrefix: string;
         rpcTimeout: number;
+        expireQueue: number;
         names: {
             [name: string]: string;
         };

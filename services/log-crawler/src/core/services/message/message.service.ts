@@ -7,6 +7,7 @@ import { LogCrawlerError, ErrorCode } from '@home/error';
 
 export namespace MessageService {
     let initialized = false;
+    let instanceId: string;
     let amqpConfig: IConfigAmqp;
     let queues: IConfigQueues;
     let connection: amqp.Connection;
@@ -32,13 +33,17 @@ export namespace MessageService {
     }
 
 
-    export async function init(_amqpConfig: IConfigAmqp, _queues: IConfigQueues): Promise<void> {
+    export async function init(_amqpConfig: IConfigAmqp, _queues: IConfigQueues, _cbRpc: (msg: amqp.ConsumeMessage | null) => void): Promise<void> {
         amqpConfig = _amqpConfig;
         queues = _queues;
 
+        instanceId = uuid4();
+
         try {
             await connect();
+            await createRpcQueues();
             await createConsumer();
+            await bindRpcCallback(_cbRpc);
         } catch (e) {
             throw e;
         }
@@ -48,27 +53,57 @@ export namespace MessageService {
 
     async function connect(): Promise<void> {
 
-        async function createQueue(name: string, bindingKey: string): Promise<void> {
-            const queueName = `${amqpConfig.prefix}.${name}`;
-            await channel.assertQueue(queueName, { expires: 3600000 });
-            await channel.bindQueue(queueName, amqpConfig.exchange, bindingKey);
-
-        }
-
         connection = await amqp.connect(`amqp://${amqpConfig.username}:${amqpConfig.password}@${amqpConfig.host}`);
         channel = await connection.createChannel();
         await channel.assertExchange(amqpConfig.exchange, 'topic', { autoDelete: true });
-        await createQueue(queues.rpc.responseQueuePrefix, queues.rpc.responseQueuePrefix);
+    }
+
+    export async function disconnect(): Promise<void> {
+        await channel.close();
+        await connection.close();
+
+    }
+
+    async function bindRpcCallback(cb: (msg: amqp.ConsumeMessage | null) => void): Promise<void> {
+        // Anycast Queue
+        let queueName = `${amqpConfig.prefix}.${queues.rpc.ownRpcQueuePrefix}.anycast`;
+        channel.consume(queueName, cb);
+
+        // Broad-/Unicast Queue
+        queueName = `${amqpConfig.prefix}.${queues.rpc.ownRpcQueuePrefix}.${instanceId}`;
+        channel.consume(queueName, cb);
+    }
+
+    async function createQueue(name: string, bindingKey: string): Promise<void> {
+        await channel.assertQueue(name, { autoDelete: true, expires: queues.rpc.expireQueue });
+        await channel.bindQueue(name, amqpConfig.exchange, bindingKey);
+    }
+
+    async function createRpcQueues(): Promise<void> {
+        // Anycast Queue
+        let bindingKey = `${queues.rpc.ownRpcQueuePrefix}.anycast`;
+        let queueName = '';
+        await createQueue(`${amqpConfig.prefix}.${bindingKey}`, bindingKey);
+
+        // Broadcast Queue
+        bindingKey = `${queues.rpc.ownRpcQueuePrefix}.broadcast`;
+        queueName = `${queues.rpc.ownRpcQueuePrefix}.${instanceId}`;
+        await createQueue(`${amqpConfig.prefix}.${queueName}`, bindingKey);
+
+        // Unicast Queue
+        bindingKey = `${queues.rpc.ownRpcQueuePrefix}.unicast.${instanceId}`;
+        await createQueue(`${amqpConfig.prefix}.${queueName}`, bindingKey);
     }
 
     async function createConsumer(): Promise<void> {
 
         async function consumeQueue(name: string, cb: (msg: amqp.ConsumeMessage | null) => void): Promise<void> {
             const queue = `${amqpConfig.prefix}.${name}`;
+            await createQueue(queue, name);
             channel.consume(queue, cb);
         }
 
-        consumeQueue(queues.rpc.responseQueuePrefix, (msg) => {
+        consumeQueue(`${queues.rpc.responseQueuePrefix}.${instanceId}`, (msg) => {
             if (msg !== null) {
                 if (msg.properties.messageId) {
                     const id = msg.properties.messageId as string;
@@ -111,7 +146,7 @@ export namespace MessageService {
             switch (type) {
                 case EnumRpcTypes.ANYCAST: routingKey = `${routingKey}.anycast`; break;
                 case EnumRpcTypes.UNICAST: routingKey = `${routingKey}.unicast.${destination}`; break;
-                case EnumRpcTypes.BROADCAST: routingKey = `${routingKey}.broadcasts`; break;
+                case EnumRpcTypes.BROADCAST: routingKey = `${routingKey}.broadcast`; break;
                 default: return reject(new LogCrawlerError(`Invalid RPC routingKey ${type}`));
             }
 
@@ -131,7 +166,7 @@ export namespace MessageService {
 
             rpcCache.push(msgRpc);
             // const routingKey = `${queues.rpc.names[rpcQueue.toString()]}.broadcast`;
-            channel.publish(amqpConfig.exchange, routingKey, msgBuffer, { messageId: id, replyTo: queues.rpc.responseQueuePrefix });
+            channel.publish(amqpConfig.exchange, routingKey, msgBuffer, { messageId: id, replyTo: `${queues.rpc.responseQueuePrefix}.${instanceId}` });
         });
     }
 }
