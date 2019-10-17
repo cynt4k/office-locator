@@ -13,7 +13,7 @@ const configDatabase = config.get<IConfigDatabase>('database');
 
 Logger.init();
 
-(async () => {
+(async (): Promise<void> => {
     try {
         await MessageService.init(configAmqp, configQueues, RpcService.handleRpcMessages);
         Logger.info(`Connection to AMQP ${configAmqp.host} successfull`);
@@ -34,7 +34,7 @@ Logger.init();
     const response = await MessageService.rpcAnycast({ jo: 'asf' }, MessageService.EnumRpcQueues.WIFI);
     console.log(response);
 
-    async function exitHandler(exitCode?: number) {
+    async function exitHandler(exitCode?: number): Promise<void> {
         await MessageService.disconnect();
     }
 

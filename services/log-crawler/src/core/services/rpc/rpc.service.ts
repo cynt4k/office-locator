@@ -5,7 +5,9 @@ export namespace RpcService {
 
     export function handleRpcMessages(msg: ConsumeMessage | null): void {
         if (msg !== null) {
-            Logger.debug(msg.content.toString());
+            // switch (msg.properties.type as string) {
+
+            // }
         }
     }
 }

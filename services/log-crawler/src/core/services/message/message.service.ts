@@ -67,11 +67,11 @@ export namespace MessageService {
     async function bindRpcCallback(cb: (msg: amqp.ConsumeMessage | null) => void): Promise<void> {
         // Anycast Queue
         let queueName = `${amqpConfig.prefix}.${queues.rpc.ownRpcQueuePrefix}.anycast`;
-        channel.consume(queueName, cb);
+        await channel.consume(queueName, cb);
 
         // Broad-/Unicast Queue
         queueName = `${amqpConfig.prefix}.${queues.rpc.ownRpcQueuePrefix}.${instanceId}`;
-        channel.consume(queueName, cb);
+        await channel.consume(queueName, cb);
     }
 
     async function createQueue(name: string, bindingKey: string): Promise<void> {
@@ -103,11 +103,11 @@ export namespace MessageService {
             channel.consume(queue, cb);
         }
 
-        consumeQueue(`${queues.rpc.responseQueuePrefix}.${instanceId}`, (msg) => {
+        await consumeQueue(`${queues.rpc.responseQueuePrefix}.${instanceId}`, (msg: amqp.ConsumeMessage | null) => {
             if (msg !== null) {
                 if (msg.properties.messageId) {
                     const id = msg.properties.messageId as string;
-                    const rpcMsg = _.find(rpcCache, (entry) => entry.id === id);
+                    const rpcMsg = _.find(rpcCache, (entry: IRpcMsg) => entry.id === id);
                     if (rpcMsg) {
                         rpcCache.splice(rpcCache.indexOf(rpcMsg), 1);
                         rpcMsg.cb(msg.content.toString());
@@ -141,7 +141,7 @@ export namespace MessageService {
         const id = uuid4();
         const msgBuffer = Buffer.from(JSON.stringify(msg));
 
-        return new Promise<string>((resolve, reject) => {
+        return new Promise<string>((resolve: (value: string) => void, reject: (reason: any) => void): Promise<string> | undefined | void => {
             let routingKey = `${queues.rpc.names[rpcQueue.toString()]}`;
             switch (type) {
                 case EnumRpcTypes.ANYCAST: routingKey = `${routingKey}.anycast`; break;
@@ -158,7 +158,7 @@ export namespace MessageService {
                 id,
                 msg: msgBuffer,
                 type: rpcQueue,
-                cb: (res: string) => {
+                cb: (res: string): void => {
                     clearTimeout(timer);
                     return resolve(res);
                 }

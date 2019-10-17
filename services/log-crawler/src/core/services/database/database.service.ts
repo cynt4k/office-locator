@@ -11,7 +11,7 @@ export namespace DatabaseService {
 
         try {
             await connect();
-            await initTables();
+            initTables();
         } catch (e) {
             throw e;
         }
@@ -36,7 +36,7 @@ export namespace DatabaseService {
         await connection.authenticate();
     }
 
-    async function initTables(): Promise<void> {
+    function initTables(): void {
         LogModel(connection);
     }
 }

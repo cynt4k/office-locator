@@ -32,7 +32,7 @@ export namespace Logger {
         isInitialized = true;
     };
 
-    const checkInitialized = () => {
+    const checkInitialized = (): void => {
         if (!isInitialized) {
             throw new LogCrawlerError('Logger not initialized', ErrorCode.LOGGER_NOT_INITIALIZED);
         }
@@ -63,7 +63,7 @@ export namespace Logger {
         logger.warn(message);
     };
 
-    export const getExpressLogger = () => {
+    export const getExpressLogger = (): any => {
         return log4js.connectLogger(logger, { level: 'info'});
     };
 }

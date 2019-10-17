@@ -13,7 +13,7 @@ export class Logs extends Model {
     public acctAuthentic!: number | null;
 }
 
-export const LogModel = ((conn: Sequelize) => {
+export const LogModel = ((conn: Sequelize): void => {
     Logs.init({
         id: {
             type: DataTypes.INTEGER,
